@@ -60,7 +60,7 @@ defmodule MiniTeller.MixProject do
       {:tesla, "~> 1.4"},
       {:mox, "~> 1.0", only: :test},
       {:excoveralls, "~> 0.14", only: :test},
-        {:req, "~> 0.3.0"}
+      {:websockex, "~> 0.4.3"}
     ]
   end
 
