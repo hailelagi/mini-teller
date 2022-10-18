@@ -1,6 +1,4 @@
 defmodule MiniTeller.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
   @moduledoc false
 
   use Application
@@ -8,26 +6,18 @@ defmodule MiniTeller.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Start the Ecto repository
       MiniTeller.Repo,
-      # Start the Telemetry supervisor
       MiniTellerWeb.Telemetry,
-      # Start the PubSub system
       {Phoenix.PubSub, name: MiniTeller.PubSub},
-      # Start the Endpoint (http/https)
-      MiniTellerWeb.Endpoint
-      # Start a worker by calling: MiniTeller.Worker.start_link(arg)
-      # {MiniTeller.Worker, arg}
+      MiniTellerWeb.Endpoint,
+      {Finch, name: MiniTeller.Finch},
+      {MiniTeller.Client.Session, nil}
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: MiniTeller.Supervisor]
     Supervisor.start_link(children, opts)
   end
 
-  # Tell Phoenix to update the endpoint configuration
-  # whenever the application is updated.
   @impl true
   def config_change(changed, _new, removed) do
     MiniTellerWeb.Endpoint.config_change(changed, removed)

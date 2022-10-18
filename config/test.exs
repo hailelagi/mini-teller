@@ -30,4 +30,6 @@ config :mini_teller,
   client: MiniTeller.Mock,
   base_url: nil,
   api_key: nil,
-  device_id: nil
+  device_id: nil,
+  username: nil,
+  password: nil

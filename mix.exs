@@ -59,7 +59,8 @@ defmodule MiniTeller.MixProject do
       {:finch, "~> 0.13.0"},
       {:tesla, "~> 1.4"},
       {:mox, "~> 1.0", only: :test},
-      {:excoveralls, "~> 0.14", only: :test}
+      {:excoveralls, "~> 0.14", only: :test},
+        {:req, "~> 0.3.0"}
     ]
   end
 

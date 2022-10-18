@@ -50,7 +50,9 @@ config :phoenix, :stacktrace_depth, 20
 config :phoenix, :plug_init_mode, :runtime
 
 config :mini_teller,
-  client: MiniTeller.Mock,
+  client: MiniTeller.Live,
   base_url: "https://test.teller.engineering/",
-  api_key: nil,
-  device_id: nil
+  device_id: "6AI6PAODQV2NTMLZ",
+  username: "yellow_angel",
+  password: "saudiarabia",
+  api_key: nil
