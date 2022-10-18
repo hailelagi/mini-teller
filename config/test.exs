@@ -25,3 +25,9 @@ config :logger, level: :warn
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
+
+config :mini_teller,
+  client: MiniTeller.Mock,
+  base_url: nil,
+  api_key: nil,
+  device_id: nil
