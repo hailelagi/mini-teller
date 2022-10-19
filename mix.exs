@@ -61,6 +61,7 @@ defmodule MiniTeller.MixProject do
       {:mox, "~> 1.0", only: :test},
       {:excoveralls, "~> 0.14", only: :test},
       {:websockex, "~> 0.4.3"},
+      {:joken, "~> 2.5"}
     ]
   end
 
