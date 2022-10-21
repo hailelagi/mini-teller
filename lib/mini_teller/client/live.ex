@@ -18,7 +18,9 @@ defmodule MiniTeller.Client.Live do
       {Tesla.Middleware.Timeout, timeout: 30_000},
       Tesla.Middleware.JSON,
       MiniTeller.Client.IOS,
-      {Tesla.Middleware.Logger, filter_headers: ~w[]a},
+      # do not log sensitive info
+      {Tesla.Middleware.Logger, filter_headers: ~w[api-key device-id r-token f-token]},
+      # todo(debug): Tesla.Middleware.Logger,
       Tesla.Middleware.Telemetry
     ]
 
@@ -26,8 +28,12 @@ defmodule MiniTeller.Client.Live do
   end
 
   def enroll() do
-    with {:ok, mfa, %{f_token: f, r_token: r}} <- signin("yellow_angel", "saudiarabia"),
-         {:ok, data} <- signin_mfa(mfa, r, f) do
+    # Session.establish()
+    # %{device_id: id} = Session.info()
+
+    with {:ok, devices, %{f_token: f, r_token: r}} <- signin("yellow_angel", "saudiarabia"),
+         {:ok, id} <- select_device(devices),
+         {:ok, data} <- signin_mfa(id, r, f) do
       data
     else
       err -> err
@@ -35,15 +41,14 @@ defmodule MiniTeller.Client.Live do
   end
 
   def signin(username, password) do
-    # Session.establish()
-    # %{device_id: id} = Session.info()
+    device_id = "TCLRS7LZQSJD5ULC"
 
     build_client()
     |> Tesla.request(
       url: "/signin",
       method: :post,
       body: %{username: username, password: password},
-      headers: [{"device-id", "TCLRS7LZQSJD5ULC"}]
+      headers: [{"device-id", device_id}]
     )
     |> case do
       {:ok, %{status: 200, body: %{"data" => data}} = env} ->
@@ -51,11 +56,16 @@ defmodule MiniTeller.Client.Live do
         r = Tesla.get_header(env, "r-token")
 
         spec = Tesla.get_header(env, "f-token-spec") |> Base.decode64!()
-        [_, format] = String.split(spec, "sha-256-b64-np")
+        [_, format] = String.split(spec, ~r{sha-256-b64-np\(})
+        [format, _] = String.split(format, ")")
 
+        format = String.split(format, "-") |> Enum.join("")
+        [seperator] = Regex.run(~r/[[:punct:]]+/, format)
 
-        # TODO: dynamically parse f-token
-        message = req_id <> format
+       message =
+        String.split(format, seperator)
+        |> Enum.map(&order_hash(&1, device_id, req_id, username))
+        |> Enum.join(seperator)
 
         {:ok, data, %{f_token: f_token(message), r_token: r}}
 
@@ -64,12 +74,21 @@ defmodule MiniTeller.Client.Live do
     end
   end
 
-  def signin_mfa(mfa, r_token, f_token) do
+  defp order_hash(spec, device_id, req_id, username) do
+    case spec do
+      "deviceid" -> device_id
+      "lastrequestid" -> req_id
+      "username" -> username
+      "apikey" -> Application.get_env(:mini_teller, :api_key)
+    end
+  end
+
+  def signin_mfa(id, r_token, f_token) do
     build_client()
     |> Tesla.request(
       url: "/signin/mfa",
       method: :post,
-      body: %{device_id: List.first(mfa["devices"])["id"]},
+      body: %{device_id: id},
       headers: [
         {"device-id", "TCLRS7LZQSJD5ULC"},
         {"teller-mission", "accepted!"},
@@ -96,6 +115,11 @@ defmodule MiniTeller.Client.Live do
     build_client()
     |> Tesla.get("/")
     |> parse_response()
+  end
+
+  defp select_device(%{"devices" => devices}) do
+    # todo: refactor call from controller
+    {:ok, List.first(devices)["id"]}
   end
 
   defp f_token(message), do: :crypto.hash(:sha256, message) |> Base.encode64(padding: false)
