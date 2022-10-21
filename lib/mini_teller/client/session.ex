@@ -12,10 +12,28 @@ defmodule MiniTeller.Client.Session do
   def init(_), do: {:ok, nil}
 
   def start_link(_) do
-    Agent.start_link(fn -> %{key: nil, token: nil, device_id: nil} end, name: __MODULE__)
+    Agent.start_link(
+      fn ->
+        %{
+          bank_job_key: nil,
+          csrf: nil,
+          device_id: nil,
+          request_id: nil,
+          f_token: nil,
+          r_token: nil
+        }
+      end,
+      name: __MODULE__
+    )
   end
 
   def info, do: Agent.get(__MODULE__, & &1)
+
+  def store_header(req_id, f_token, r_token) do
+    Agent.update(__MODULE__, fn session ->
+      %{session | request_id: req_id, f_token: f_token, r_token: r_token}
+    end)
+  end
 
   def establish do
     with {:ok, %Tesla.Env{} = env} <- Tesla.request(method: :get, url: base_url()),
@@ -31,7 +49,7 @@ defmodule MiniTeller.Client.Session do
       Floki.find(document, ".app-label=Settings")
       [{"meta", [{"content", token}, _], _}] = Floki.find(document, "meta[name='csrf-token']")
 
-      Agent.update(__MODULE__, fn _ -> %{key: key, token: token, device_id: nil} end)
+      Agent.update(__MODULE__, fn session -> %{session | bank_job_key: key, csrf: token} end)
     else
       error -> ParseError.call(error)
     end
