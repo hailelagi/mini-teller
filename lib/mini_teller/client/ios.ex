@@ -11,6 +11,7 @@ defmodule MiniTeller.Client.IOS do
     env
     |> Tesla.put_headers([
       {"user-agent", "Teller Bank iOS 2.0"},
+      {"accept", "application/json"},
       {"api-key", Application.get_env(:mini_teller, :api_key)},
     ])
     |> Tesla.run(next)
