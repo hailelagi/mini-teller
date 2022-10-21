@@ -17,7 +17,7 @@ defmodule MiniTeller.Client.Session do
         %{
           bank_job_key: nil,
           csrf: nil,
-          device_id: nil,
+          device_id: "TCLRS7LZQSJD5ULC",
           request_id: nil,
           f_token: nil,
           r_token: nil
@@ -28,6 +28,8 @@ defmodule MiniTeller.Client.Session do
   end
 
   def info, do: Agent.get(__MODULE__, & &1)
+
+  def cache_device(id), do: Agent.update(__MODULE__, fn session -> %{session | device_id: id} end)
 
   def store_header(req_id, f_token, r_token) do
     Agent.update(__MODULE__, fn session ->
@@ -53,13 +55,6 @@ defmodule MiniTeller.Client.Session do
     else
       error -> ParseError.call(error)
     end
-  end
-
-  def device_id do
-    # Session.establish()
-    # %{token: token} = Session.info()
-
-    # todo: ws:// connection + csrf
   end
 
   defp base_url, do: Application.get_env(:mini_teller, :base_url)
