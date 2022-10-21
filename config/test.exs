@@ -29,6 +29,7 @@ config :phoenix, :plug_init_mode, :runtime
 config :mini_teller,
   client: MiniTeller.Mock,
   base_url: nil,
-  api_key: nil,
-  username: nil,
-  password: nil
+  api_key: "FakeApiKey?",
+  device_id: "FAKEDEVICE_ID",
+  username: "test_user",
+  password: "password"
