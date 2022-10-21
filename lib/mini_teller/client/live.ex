@@ -6,6 +6,10 @@ defmodule MiniTeller.Client.Live do
         MiniTeller.Client.Live.signin("yellow_angel", "saudiarabia")
     MiniTeller.Client.Live.enroll()
 
+    account number
+    available balance in cents
+    Oldest transaction amount
+
   """
 
   @behaviour MiniTeller.Client
@@ -106,6 +110,7 @@ defmodule MiniTeller.Client.Live do
     |> Tesla.get("/")
     |> parse_response()
   end
+
 
   defp parse_response(request) do
     case request do
