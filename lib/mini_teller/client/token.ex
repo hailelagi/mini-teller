@@ -1,10 +1,6 @@
 defmodule MiniTeller.Client.Token do
   @moduledoc """
     Token managment
-
-    account number
-    available balance in cents
-    Oldest transaction amount
   """
   alias MiniTeller.Client.Session
 
@@ -39,6 +35,13 @@ defmodule MiniTeller.Client.Token do
     end
   end
 
+  def encrypt(key) do
+    str = "data-to-be-encrypted"
+    iv = :crypto.strong_rand_bytes(16)
+
+    :crypto.crypto_one_time_aead(:aes_256_gcm, key, iv, str, "", true)
+  end
+
   def decrypt_a_token(token, key) do
     key = Base.decode64!(key) |> Jason.decode!()
     decrypt(token, key["key"])
@@ -50,12 +53,9 @@ defmodule MiniTeller.Client.Token do
 
     <<iv::binary-16, tag::binary-16, ciphertext::binary>> = ciphertext
 
-    # // make sure _AAD is an empty string "" if you didn't set it during encryption
     :crypto.crypto_one_time_aead(:aes_gcm, key, iv, "yellow_angel", ciphertext, true)
 
-  endkey
-
-  # generate_a_token(message), do: :crypto.crypto_one_time(:aead)
+  end
 
   defp generate_f_token(message),
     do: :crypto.hash(:sha256, message) |> Base.encode64(padding: false)
