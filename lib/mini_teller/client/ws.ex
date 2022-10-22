@@ -1,4 +1,7 @@
 defmodule MiniTeller.Client.Ws do
+  @moduledoc """
+    Liveview session
+  """
   use WebSockex
 
   def start_link(url, _), do: WebSockex.start_link(url, __MODULE__, %{}, [])
@@ -13,17 +16,6 @@ defmodule MiniTeller.Client.Ws do
     # %{type: "click", event: "open_settings",value: {}}
     IO.puts("Received Message - Type: #{inspect(type)} -- Message: #{inspect(msg)}")
 
-
-
     {:ok, state}
   end
-
-
-  def handle_frame(type, msg, state) do
-    # %{type: "click", event: "open_settings",value: {}}
-    IO.puts("Received Message - Type: #{inspect(type)} -- Message: #{inspect(msg)}")
-
-    {:ok, state}
-  end
-
 end

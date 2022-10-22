@@ -9,7 +9,6 @@ defmodule MiniTeller.Client.Live do
     account number
     available balance in cents
     Oldest transaction amount
-
   """
 
   @behaviour MiniTeller.Client
@@ -35,8 +34,10 @@ defmodule MiniTeller.Client.Live do
 
   def enroll() do
     Session.cache_device("TCLRS7LZQSJD5ULC")
+    username = Application.get_env(:mini_teller, :username)
+    password = Application.get_env(:mini_teller, :password)
 
-    with {:ok, %{"devices" => devices}} <- signin("yellow_angel", "saudiarabia"),
+    with {:ok, %{"devices" => devices}} <- signin(username, password),
          {:ok, _} <- signin_mfa(List.first(devices)["id"]),
          {:ok, %{body: %{"data" => data}} = env} <- verify("123456"),
          {:ok, _result} <- Token.decrypt_a_token(data["a_token"], data["enc_key"]) do
@@ -110,7 +111,6 @@ defmodule MiniTeller.Client.Live do
     |> Tesla.get("/")
     |> parse_response()
   end
-
 
   defp parse_response(request) do
     case request do
