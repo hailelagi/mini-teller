@@ -62,6 +62,7 @@ defmodule MiniTeller.MixProject do
       {:excoveralls, "~> 0.14", only: :test},
       {:websockex, "~> 0.4.3"},
       {:jose, "~> 1.11"},
+      {:ex_crypto, github: "ntrepid8/ex_crypto"}
     ]
   end
 
