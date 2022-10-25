@@ -24,17 +24,6 @@ defmodule MiniTeller.Client.Token do
     |> Enum.join(seperator)
   end
 
-  defp order_hash(spec, req_id) do
-    %{device_id: device_id} = Session.info()
-
-    case spec do
-      "device-id" -> device_id
-      "last-request-id" -> req_id
-      "username" -> Application.get_env(:mini_teller, :username)
-      "api-key" -> Application.get_env(:mini_teller, :api_key)
-    end
-  end
-
   def generate_s_token(enc_key, env) do
     s_token = Tesla.get_header(env, "s-token")
 
@@ -45,6 +34,17 @@ defmodule MiniTeller.Client.Token do
 
     {cipher, tag} = :crypto.crypto_one_time_aead(:aes_256_gcm, key, iv, clear_text, <<>>, true)
     {:ok, Base.encode64(cipher) <> Base.encode64(tag, padding: false)}
+  end
+
+  defp order_hash(spec, req_id) do
+    %{device_id: device_id} = Session.info()
+
+    case spec do
+      "device-id" -> device_id
+      "last-request-id" -> req_id
+      "username" -> Application.get_env(:mini_teller, :username)
+      "api-key" -> Application.get_env(:mini_teller, :api_key)
+    end
   end
 
   defp generate_f_token(message),

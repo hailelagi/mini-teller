@@ -37,8 +37,8 @@ defmodule MiniTeller.Client.Live do
          {:ok, _} <- signin_mfa(List.first(devices)["id"]),
          {:ok, %{body: %{"data" => data}} = env} <- verify("123456"),
          {:ok, s_token} <- Token.generate_s_token(data["enc_key"], env),
-         {:ok, env} <- account_details(data["accounts"], s_token) do
-          env
+         {:ok, env} <- account(:details, data["accounts"], s_token) do
+      env
     else
       err -> err
     end
@@ -102,24 +102,27 @@ defmodule MiniTeller.Client.Live do
     build_client()
     |> Tesla.post("/signin/token", %{token: a_token})
     |> parse_response()
-    |> case do
-      {:ok, %{"data" => data}} -> {:ok, data}
-      err -> err
-    end
   end
 
-  def account_details(%{"checking" => acc}, s_token) do
+  def account(type, %{"checking" => acc}, s_token) do
     id = List.first(acc)["id"]
     %{r_token: r_token, f_token: f_token} = Session.info()
 
+    url =
+      case type do
+        :details -> "accounts/#{id}/details"
+        :balances -> "accounts/#{id}/balances"
+      end
+
     build_client()
     |> Tesla.request(
-      url: "accounts/#{id}/balances",
+      url: url,
       method: :get,
       headers: [
         {"r-token", r_token},
         {"f-token", f_token},
         {"s-token", s_token},
+        {"teller-mission", "accepted!"}
       ]
     )
     |> case do
