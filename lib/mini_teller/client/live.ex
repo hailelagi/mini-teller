@@ -3,10 +3,6 @@ defmodule MiniTeller.Client.Live do
     Live teller.io sandbox api eg.
     MiniTeller.Client.Live.signin("yellow_angel", "saudiarabia")
     MiniTeller.Client.Live.enroll()
-
-    account number
-    available balance in cents
-    Oldest transaction amount
   """
 
   @behaviour MiniTeller.Client
