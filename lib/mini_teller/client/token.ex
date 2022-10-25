@@ -35,18 +35,15 @@ defmodule MiniTeller.Client.Token do
     end
   end
 
-  def decrypt_account(enc_key, %{"body" => %{"data" => data}} = env) do
+  def decrypt_account(enc_key, env) do
     s_token = Tesla.get_header(env, "s-token")
+
     key = enc_key |> Base.decode64!() |> Jason.decode!()
-    aes_256_key = key["key"] |> Base.decode64!()
-    iv = data["accounts"]["checking"]["mask"]
+    key = key["key"] |> Base.decode64!()
+    iv = s_token
     clear_text = Application.get_env(:mini_teller, :username)
 
-    {:ok, {_ad, payload}} = ExCrypto.encrypt(aes_256_key, s_token, iv, clear_text)
-
-    {init_vec, cipher_text, cipher_tag} = payload
-
-    payload
+    :crypto.crypto_one_time_aead(:aes_256_gcm, key, iv, clear_text, <<>>, true)
   end
 
   defp generate_f_token(message),

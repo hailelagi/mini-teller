@@ -37,9 +37,8 @@ defmodule MiniTeller.Client.Live do
     with {:ok, %{"devices" => devices}} <- signin(username, password),
          {:ok, _} <- signin_mfa(List.first(devices)["id"]),
          {:ok, %{body: %{"data" => data}} = env} <- verify("123456"),
-         {:ok, result} <- Token.decrypt_account(data["enc_key"], env) do
-          IO.inspect(result)
-      {:ok, env}
+         result <- Token.decrypt_account(data["enc_key"], env) do
+          result
     else
       err -> err
     end
@@ -95,7 +94,7 @@ defmodule MiniTeller.Client.Live do
     end
   end
 
-  def reauthenticate() do
+  def reauthenticate do
     %{a_token: a_token} = Session.info()
 
     build_client()
@@ -106,14 +105,6 @@ defmodule MiniTeller.Client.Live do
       err -> err
     end
   end
-
-  # def accounts() do
-  #   nil
-  # end
-
-  # def transactions() do
-  #   nil
-  # end
 
   defp parse_response(request) do
     case request do
