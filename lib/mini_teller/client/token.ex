@@ -35,15 +35,17 @@ defmodule MiniTeller.Client.Token do
     end
   end
 
-  def decrypt_account(enc_key, env) do
+  def generate_s_token(enc_key, env) do
     s_token = Tesla.get_header(env, "s-token")
+    Session.cache_s(s_token)
 
     key = enc_key |> Base.decode64!() |> Jason.decode!()
     key = key["key"] |> Base.decode64!()
     iv = s_token |> Base.decode64!(padding: false)
     clear_text = Application.get_env(:mini_teller, :username)
 
-    :crypto.crypto_one_time_aead(:aes_256_gcm, key, iv, clear_text, <<>>, true)
+    {cipher, tag} = :crypto.crypto_one_time_aead(:aes_256_gcm, key, iv, clear_text, <<>>, true)
+    {:ok, Base.encode64(cipher) <> Base.encode64(tag, padding: false)}
   end
 
   defp generate_f_token(message),

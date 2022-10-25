@@ -36,8 +36,9 @@ defmodule MiniTeller.Client.Live do
     with {:ok, %{"devices" => devices}} <- signin(username, password),
          {:ok, _} <- signin_mfa(List.first(devices)["id"]),
          {:ok, %{body: %{"data" => data}} = env} <- verify("123456"),
-         result <- Token.decrypt_account(data["enc_key"], env) do
-          result
+         {:ok, s_token} <- Token.generate_s_token(data["enc_key"], env),
+         {:ok, env} <- account_details(data["accounts"], s_token) do
+          env
     else
       err -> err
     end
@@ -89,7 +90,9 @@ defmodule MiniTeller.Client.Live do
         Session.cache_auth(data["a_token"])
 
         {:ok, env}
-      error -> ParseError.call(error)
+
+      error ->
+        ParseError.call(error)
     end
   end
 
@@ -105,14 +108,22 @@ defmodule MiniTeller.Client.Live do
     end
   end
 
-  def accounts do
-    %{a_token: a_token} = Session.info()
+  def account_details(%{"checking" => acc}, s_token) do
+    id = List.first(acc)["id"]
+    %{r_token: r_token, f_token: f_token} = Session.info()
 
     build_client()
-    |> Tesla.post("/signin/token", %{token: a_token})
-    |> parse_response()
+    |> Tesla.request(
+      url: "accounts/#{id}/balances",
+      method: :get,
+      headers: [
+        {"r-token", r_token},
+        {"f-token", f_token},
+        {"s-token", s_token},
+      ]
+    )
     |> case do
-      {:ok, %{"data" => data}} -> {:ok, data["accounts"]}
+      {:ok, data} -> {:ok, data}
       err -> err
     end
   end
