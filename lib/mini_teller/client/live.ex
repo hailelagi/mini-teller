@@ -106,6 +106,18 @@ defmodule MiniTeller.Client.Live do
     end
   end
 
+  def accounts do
+    %{a_token: a_token} = Session.info()
+
+    build_client()
+    |> Tesla.post("/signin/token", %{token: a_token})
+    |> parse_response()
+    |> case do
+      {:ok, %{"data" => data}} -> {:ok, data["accounts"]}
+      err -> err
+    end
+  end
+
   defp parse_response(request) do
     case request do
       {:ok, %{status: 200, body: body} = env} ->
