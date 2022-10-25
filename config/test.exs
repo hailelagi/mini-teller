@@ -31,5 +31,5 @@ config :mini_teller,
   base_url: nil,
   api_key: "FakeApiKey?",
   device_id: "FAKEDEVICE_ID",
-  username: "test_user",
+  username: "teller",
   password: "password"
