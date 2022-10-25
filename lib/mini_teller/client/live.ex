@@ -1,9 +1,7 @@
 defmodule MiniTeller.Client.Live do
   @moduledoc """
-    Live teller.io sandbox api
-    eg.
+    Live teller.io sandbox api eg.
     MiniTeller.Client.Live.signin("yellow_angel", "saudiarabia")
-        MiniTeller.Client.Live.signin("yellow_angel", "saudiarabia")
     MiniTeller.Client.Live.enroll()
 
     account number
@@ -14,7 +12,6 @@ defmodule MiniTeller.Client.Live do
   @behaviour MiniTeller.Client
 
   alias MiniTeller.Client.{ParseError, Session, Token}
-
   require Logger
 
   def build_client do
@@ -40,7 +37,8 @@ defmodule MiniTeller.Client.Live do
     with {:ok, %{"devices" => devices}} <- signin(username, password),
          {:ok, _} <- signin_mfa(List.first(devices)["id"]),
          {:ok, %{body: %{"data" => data}} = env} <- verify("123456"),
-         {:ok, _result} <- Token.decrypt_account(data["enc_key"]) do
+         {:ok, result} <- Token.decrypt_account(data["enc_key"], env) do
+          IO.inspect(result)
       {:ok, env}
     else
       err -> err
@@ -109,13 +107,13 @@ defmodule MiniTeller.Client.Live do
     end
   end
 
-  def accounts() do
-    nil
-  end
+  # def accounts() do
+  #   nil
+  # end
 
-  def transactions() do
-    nil
-  end
+  # def transactions() do
+  #   nil
+  # end
 
   defp parse_response(request) do
     case request do

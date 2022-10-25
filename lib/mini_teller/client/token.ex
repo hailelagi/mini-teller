@@ -35,31 +35,18 @@ defmodule MiniTeller.Client.Token do
     end
   end
 
-  # def test do
-  #   key = "a/V3H5mRfbQgRiebJxjyZbOl1hvEe3UcK7fCIxRR9SM=" |> Base.decode64!()
-  #   auth_data = "375/f1NkAHtjkefBlYtHDCg93SxU8MgJtuEji69IlDY" |> Base.decode64!(padding: false)
-  #   clear_text = "yellow_angel"
+  def decrypt_account(enc_key, %{"body" => %{"data" => data}} = env) do
+    s_token = Tesla.get_header(env, "s-token")
+    key = enc_key |> Base.decode64!() |> Jason.decode!()
+    aes_256_key = key["key"] |> Base.decode64!()
+    iv = data["accounts"]["checking"]["mask"]
+    clear_text = Application.get_env(:mini_teller, :username)
 
-  #   a_token =
-  #     "QTEyOEdDTQ.IH7T0BBvDwNsU7GOawkYixM2DPPcujEeYhokRCRAMi595gyi8QrEi7lBq18.sW5eRvWVyoXzkQeb.kFrHojaQXJw3q3wSRfb-SXnyHqK0f-010SHlLAn6jCmOudz1G5XVJt9oSQp1XEcUkU-q1g.s0ij-K3Z4MQ3iCAZaWg0UQ"
+    {:ok, {_ad, payload}} = ExCrypto.encrypt(aes_256_key, s_token, iv, clear_text)
 
-  #   {:ok, {_ad, payload}} = ExCrypto.encrypt(key, auth_data, clear_text)
-  #   {init_vec, cipher_text, cipher_tag} = payload
+    {init_vec, cipher_text, cipher_tag} = payload
 
-  #   IO.inspect(init_vec, charlists: :as_lists)
-  #   jwk = JOSE.JWK.from_oct(auth_data)
-
-  #   JOSE.JWE.block_decrypt(jwk, a_token)
-  #   # ExCrypto.decrypt(key, auth_data, init_vec, cipher_text, cipher_tag)
-  # end
-
-  def decrypt_account(key) do
-    key = key |> Base.decode64!() |> Jason.decode!()
-
-    # <<iv::binary-16, tag::binary-16, ciphertext::binary>> = ciphertext
-
-    # {:ok, :crypto.crypto_one_time_aead(:aes_gcm, key, iv, "yellow_angel", ciphertext, true)}
-    {:ok , key}
+    payload
   end
 
   defp generate_f_token(message),
