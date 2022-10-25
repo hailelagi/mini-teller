@@ -28,14 +28,14 @@ defmodule MiniTeller.Client.Token do
     Tesla.get_header(env, "s-token") |> Session.cache_s()
   end
 
-  def decrypt_account(enc_key, number) do
+  def decrypt_account(enc_key, format) do
     key = enc_key |> Base.decode64!() |> Jason.decode!()
-    key = key["key"] |> Base.decode64!()
-    iv = number
-    clear_text = Application.get_env(:mini_teller, :username)
+    aes_256_key = key["key"] |> Base.decode64!()
 
-    {cipher, tag} = :crypto.crypto_one_time_aead(:aes_256_gcm, key, iv, clear_text, <<>>, true)
-    {:ok, Base.encode64(cipher) <> Base.encode64(tag, padding: false)}
+    [ct, iv, t] = String.split(format, ":") |> Enum.map(& Base.decode64!(&1))
+    username = Application.get_env(:mini_teller, :username)
+
+    :crypto.crypto_one_time_aead(:aes_256_gcm, aes_256_key, iv, ct, username, t, false)
   end
 
   defp order_hash(spec, req_id) do
