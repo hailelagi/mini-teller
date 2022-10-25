@@ -37,7 +37,6 @@ defmodule MiniTeller.Client.Token do
 
   def generate_s_token(enc_key, env) do
     s_token = Tesla.get_header(env, "s-token")
-    Session.cache_s(s_token)
 
     key = enc_key |> Base.decode64!() |> Jason.decode!()
     key = key["key"] |> Base.decode64!()
