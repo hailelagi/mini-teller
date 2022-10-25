@@ -21,8 +21,7 @@ defmodule MiniTeller.Client.Live do
       Tesla.Middleware.JSON,
       MiniTeller.Client.IOS,
       # do not log sensitive info
-      # {Tesla.Middleware.Logger, filter_headers: ~w[api-key device-id r-token f-token s-token]},
-      Tesla.Middleware.Logger,
+      {Tesla.Middleware.Logger, filter_headers: ~w[api-key device-id r-token f-token s-token]},
       Tesla.Middleware.Telemetry
     ]
 
