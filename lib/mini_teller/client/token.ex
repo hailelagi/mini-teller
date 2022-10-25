@@ -40,7 +40,7 @@ defmodule MiniTeller.Client.Token do
 
     key = enc_key |> Base.decode64!() |> Jason.decode!()
     key = key["key"] |> Base.decode64!()
-    iv = s_token
+    iv = s_token |> Base.decode64!(padding: false)
     clear_text = Application.get_env(:mini_teller, :username)
 
     :crypto.crypto_one_time_aead(:aes_256_gcm, key, iv, clear_text, <<>>, true)
