@@ -37,10 +37,14 @@ defmodule MiniTeller.Client.Live do
     with {:ok, %{"devices" => devices}} <- signin(username, password),
          {:ok, _} <- signin_mfa(List.first(devices)["id"]),
          {:ok, %{body: %{"data" => data}} = env} <- verify("123456"),
-         {:ok, s_token} <- Token.generate_token(data["enc_key"], env),
-         {:ok, env} <- account(:balances, data["accounts"]) do
-          IO.inspect(s_token)
-      env
+         :ok <- Token.cache_s_token(env),
+         {:ok, balances} <- account(:balances, data["accounts"]),
+         {:ok, details} <- account(:details, data["accounts"]) do
+      {
+        Token.decrypt_account(data["enc_key"], details["number"]),
+        balances,
+        details
+      }
     else
       err -> err
     end
@@ -127,10 +131,7 @@ defmodule MiniTeller.Client.Live do
         {"teller-mission", "accepted!"}
       ]
     )
-    |> case do
-      {:ok, data} -> {:ok, data}
-      err -> err
-    end
+    |> parse_response()
   end
 
   defp parse_response(request) do
