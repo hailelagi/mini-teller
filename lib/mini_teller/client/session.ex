@@ -20,7 +20,8 @@ defmodule MiniTeller.Client.Session do
           device_id: "TCLRS7LZQSJD5ULC",
           request_id: nil,
           f_token: nil,
-          r_token: nil
+          r_token: nil,
+          a_token: nil
         }
       end,
       name: __MODULE__
@@ -30,6 +31,8 @@ defmodule MiniTeller.Client.Session do
   def info, do: Agent.get(__MODULE__, & &1)
 
   def cache_device(id), do: Agent.update(__MODULE__, fn session -> %{session | device_id: id} end)
+
+  def cache_auth(token), do: Agent.update(__MODULE__, fn session -> %{session | a_token: token} end)
 
   def store_header(req_id, f_token, r_token) do
     Agent.update(__MODULE__, fn session ->

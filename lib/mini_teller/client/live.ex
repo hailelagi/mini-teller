@@ -40,7 +40,7 @@ defmodule MiniTeller.Client.Live do
     with {:ok, %{"devices" => devices}} <- signin(username, password),
          {:ok, _} <- signin_mfa(List.first(devices)["id"]),
          {:ok, %{body: %{"data" => data}} = env} <- verify("123456"),
-         {:ok, _result} <- Token.decrypt_a_token(data["a_token"], data["enc_key"]) do
+         {:ok, _result} <- Token.decrypt_account(data["enc_key"]) do
       {:ok, env}
     else
       err -> err
@@ -89,27 +89,32 @@ defmodule MiniTeller.Client.Live do
       ]
     )
     |> case do
-      {:ok, %{status: 200} = env} -> {:ok, env}
+      {:ok, %{status: 200, body: %{"data" => data}} = env} ->
+        Session.cache_auth(data["a_token"])
+
+        {:ok, env}
       error -> ParseError.call(error)
     end
   end
 
   def reauthenticate() do
+    %{a_token: a_token} = Session.info()
+
     build_client()
-    |> Tesla.get("/")
+    |> Tesla.post("/signin/token", %{token: a_token})
     |> parse_response()
+    |> case do
+      {:ok, %{"data" => data}} -> {:ok, data}
+      err -> err
+    end
   end
 
   def accounts() do
-    build_client()
-    |> Tesla.get("/")
-    |> parse_response()
+    nil
   end
 
   def transactions() do
-    build_client()
-    |> Tesla.get("/")
-    |> parse_response()
+    nil
   end
 
   defp parse_response(request) do
