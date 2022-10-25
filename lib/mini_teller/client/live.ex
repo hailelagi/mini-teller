@@ -21,7 +21,8 @@ defmodule MiniTeller.Client.Live do
       Tesla.Middleware.JSON,
       MiniTeller.Client.IOS,
       # do not log sensitive info
-      {Tesla.Middleware.Logger, filter_headers: ~w[api-key device-id r-token f-token s-token]},
+      # {Tesla.Middleware.Logger, filter_headers: ~w[api-key device-id r-token f-token s-token]},
+      Tesla.Middleware.Logger,
       Tesla.Middleware.Telemetry
     ]
 
@@ -36,8 +37,9 @@ defmodule MiniTeller.Client.Live do
     with {:ok, %{"devices" => devices}} <- signin(username, password),
          {:ok, _} <- signin_mfa(List.first(devices)["id"]),
          {:ok, %{body: %{"data" => data}} = env} <- verify("123456"),
-         {:ok, s_token} <- Token.generate_s_token(data["enc_key"], env),
-         {:ok, env} <- account(:details, data["accounts"], s_token) do
+         {:ok, s_token} <- Token.generate_token(data["enc_key"], env),
+         {:ok, env} <- account(:balances, data["accounts"]) do
+          IO.inspect(s_token)
       env
     else
       err -> err
@@ -104,9 +106,9 @@ defmodule MiniTeller.Client.Live do
     |> parse_response()
   end
 
-  def account(type, %{"checking" => acc}, s_token) do
+  def account(type, %{"checking" => acc}) do
     id = List.first(acc)["id"]
-    %{r_token: r_token, f_token: f_token} = Session.info()
+    %{r_token: r_token, f_token: f_token, s_token: s_token} = Session.info()
 
     url =
       case type do

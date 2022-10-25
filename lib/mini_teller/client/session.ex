@@ -21,7 +21,8 @@ defmodule MiniTeller.Client.Session do
           request_id: nil,
           f_token: nil,
           r_token: nil,
-          a_token: nil
+          a_token: nil,
+          s_token: nil
         }
       end,
       name: __MODULE__
@@ -29,6 +30,8 @@ defmodule MiniTeller.Client.Session do
   end
 
   def info, do: Agent.get(__MODULE__, & &1)
+
+  def cache_s(token), do:  Agent.update(__MODULE__, fn session -> %{session | s_token: token} end)
 
   def cache_device(id), do: Agent.update(__MODULE__, fn session -> %{session | device_id: id} end)
 
